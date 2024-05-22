@@ -4,7 +4,7 @@ import cors from "cors";
 import multer from "multer";
 import path from "path";
 import jwt from "jsonwebtoken";
-import "dotenv/config";
+// import "dotenv/config";
 
 // Configure multer for file storage
 const app = express();
@@ -32,11 +32,11 @@ const upload = multer({
 });
 
 const db = mysql.createConnection({
-  host: process.env.HOST,
-  user: process.env.USER,
-  port: process.env.PORT,
-  password: process.env.PASSWORD,
-  database: process.env.DATABASE_NAME,
+  database: "estate",
+  host: "mysql-610216d-balajisivakumar2003-c826.e.aivencloud.com",
+  port: "19404",
+  user: "avnadmin",
+  password: "AVNS_lzmVGqFWgAhP9x9zmB0",
 });
 
 db.connect((err) => {
