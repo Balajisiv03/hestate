@@ -168,6 +168,43 @@ app.get("/listings", async (req, res) => {
   }
 });
 
+app.post("/signup", (req, res) => {
+  const name = req.body.name;
+  const email = req.body.email;
+  const password = req.body.password;
+
+  // Validate inputs (you can add more validation as needed)
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: "Invalid input data" });
+  }
+
+  const checkemail = "SELECT * FROM user WHERE email=?";
+  db.query(checkemail, [email], (err, data) => {
+    if (err) {
+      console.error("Error checking email:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+
+    if (data.length > 0) {
+      return res
+        .status(400)
+        .json({ error: "User with this email already registered" });
+    }
+
+    const sqlinsert =
+      "INSERT INTO user (name, email, password) VALUES (?, ?, ?)";
+    db.query(sqlinsert, [name, email, password], (err, result) => {
+      if (err) {
+        console.error("Error inserting data:", err);
+        return res.status(500).json({ error: "Internal server error" });
+      }
+
+      console.log(result);
+      res.status(200).send("Data inserted successfully");
+    });
+  });
+});
+
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
