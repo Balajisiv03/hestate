@@ -47,10 +47,13 @@ const CreateListing = () => {
     });
 
     try {
-      const response = await fetch("http://localhost:3001/create-listing", {
-        method: "POST",
-        body: data,
-      });
+      const response = await fetch(
+        "https://hestate-backend.onrender.com/create-listing",
+        {
+          method: "POST",
+          body: data,
+        }
+      );
       if (response.ok) {
         const result = await response.json();
         console.log("Success:", result);

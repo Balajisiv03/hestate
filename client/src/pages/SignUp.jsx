@@ -27,7 +27,7 @@ const SignUp = () => {
       if (!email || !password || !name) {
         alert("enter the name, password and email");
       } else {
-        Axios.post("http://localhost:3001/signup", {
+        Axios.post("https://hestate-backend.onrender.com/signup", {
           name,
           email,
           password,
@@ -52,7 +52,7 @@ const SignUp = () => {
     if (!signup) {
       console.log(email, password, 1);
 
-      Axios.post("http://localhost:3001/login", {
+      Axios.post("https://hestate-backend.onrender.com/login", {
         email,
         password,
       })

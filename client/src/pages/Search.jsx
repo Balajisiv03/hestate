@@ -27,7 +27,7 @@ const Search = () => {
       });
 
       const response = await fetch(
-        `http://localhost:3001/listings?${queryParams.toString()}`
+        `https://hestate-backend.onrender.com/listings?${queryParams.toString()}`
       );
       const data = await response.json();
       setListings(data);
@@ -159,9 +159,7 @@ const Search = () => {
           <button className="bg-slate-800 text-white p-3 rounded-lg uppercase hover:opacity-80 focus:outline-none focus:ring focus:border-blue-300">
             Search
           </button>
-          <div>
-            
-          </div>
+          <div></div>
         </form>
       </div>
 
