@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const SignUp = () => {
-  const [signup, setSignup] = useState(true);
+  const [signup, setSignup] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,12 +53,14 @@ const SignUp = () => {
       console.log(email, password, 1);
 
       Axios.post("https://hestate-backend.onrender.com/login", {
+        name,
         email,
         password,
       })
         .then((response) => {
           if (response.data && response.data.Status === "Success") {
             toast.success("Login success");
+
             localStorage.setItem(
               "UserDetails",
               JSON.stringify({ name: response.data.name, email, password })
@@ -127,6 +129,7 @@ const SignUp = () => {
         <button type="button" onClick={handlebtn} className="text-blue-700">
           {signup ? "Signin" : "Signup"}
         </button>
+        {/* {loginStatus && <button onClick={userauth}>Check</button>} */}
       </div>
     </div>
   );

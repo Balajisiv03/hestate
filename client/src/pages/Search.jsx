@@ -57,6 +57,31 @@ const Search = () => {
     fetchListings();
   };
 
+  const handleLike = async (id) => {
+    try {
+      const response = await fetch(
+        `https://hestate-backend.onrender.com/like-listing/${id}`,
+        {
+          method: "POST",
+        }
+      );
+
+      if (response.ok) {
+        setListings((prevListings) =>
+          prevListings.map((listing) =>
+            listing.id === id
+              ? { ...listing, like_count: listing.like_count + 1 }
+              : listing
+          )
+        );
+      } else {
+        throw new Error("Failed to like the listing");
+      }
+    } catch (error) {
+      console.error("Error liking the listing:", error);
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row">
       <div className="p-3 border-b-2 md:border-r-2 md:min-h-screen">
@@ -187,6 +212,15 @@ const Search = () => {
                   Discounted Price: ${listing.discounted_price}
                 </p>
               )}
+              <div>
+                {" "}
+                <button
+                  onClick={() => handleLike(listing.id)}
+                  className="py-2 px-4 text-white bg-blue-500 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200 ease-in-out"
+                >
+                  {listing.like_count} Likes
+                </button>
+              </div>
             </div>
           ))}
         </div>
