@@ -16,7 +16,6 @@ app.use(express.urlencoded({ limit: "30mb", extended: true }));
 app.use(cors());
 
 app.use("/uploads", express.static("uploads"));
-// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieparser());
@@ -64,37 +63,72 @@ db.connect((err) => {
   }
 });
 
-const verifyJWT = (req, res, next) => {
-  const token = req.headers["x-access-token"];
-  if (!token) {
-    res.send("We need token give it next time");
-  } else {
-    jwt.verify(token, "secret", (err, decoded) => {
-      if (err) {
-        res.json({ auth: false, message: "Failed to authenticate" });
-      } else {
-        req.mail = decoded.id;
-        next();
-      }
-    });
+// const verifyJWT = (req, res, next) => {
+//   const token = req.headers["x-access-token"];
+//   if (!token) {
+//     res.send("We need token give it next time");
+//   } else {
+//     jwt.verify(token, "secret", (err, decoded) => {
+//       if (err) {
+//         res.json({ auth: false, message: "Failed to authenticate" });
+//       } else {
+//         req.mail = decoded.id;
+//         next();
+//       }
+//     });
+//   }
+// };
+
+app.get("/verifyToken", (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
-};
+
+  const token = authHeader.split(" ")[1];
+  jwt.verify(token, "test", (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    res.json({ message: "Token verified" });
+  });
+});
 
 // app.get("/isAuth", verifyJWT, (req, res) => {
-//   res.send("Authenticeted Successfully");
+//   const email = req.mail; // Assuming you stored email in req.mail
+//   const query = "SELECT id, name, email FROM user WHERE email=?";
+//   db.query(query, [email], (err, result) => {
+//     if (err) {
+//       return res.status(500).json({ error: "Internal server error" });
+//     }
+//     if (result.length > 0) {
+//       res.json({ auth: true, result });
+//     } else {
+//       res.status(401).json({ auth: false, message: "User not found" });
+//     }
+//   });
 // });
 
-app.get("/isAuth", verifyJWT, (req, res) => {
-  const email = req.mail; // Assuming you stored email in req.mail
-  const query = "SELECT id, name, email FROM user WHERE email=?";
-  db.query(query, [email], (err, result) => {
+app.get("/singleUser", (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  const decodedToken = jwt.decode(token);
+  console.log(decodedToken);
+  const sql = "select * from user where email=?";
+  db.query(sql, [decodedToken.email], (err, data) => {
     if (err) {
-      return res.status(500).json({ error: "Internal server error" });
+      console.log(err);
+      return res.status(500).json({ Error: "internal login error" });
     }
-    if (result.length > 0) {
-      res.json({ auth: true, result });
+    if (data.length > 0) {
+      res.send(data[0]);
     } else {
-      res.status(401).json({ auth: false, message: "User not found" });
+      res.status(404).json({ Error: "user not found" });
     }
   });
 });
@@ -153,47 +187,31 @@ app.post("/login", (req, res) => {
       });
     }
     if (data.length > 0) {
-      try {
-        const checkpass = req.body.password;
-        const password = data[0].password;
-        const compare = checkpass.localeCompare(password);
-        console.log(compare);
-        if (compare == 0) {
-          // const token = jwt.sign(
-          //   { email: req.body.email, password: data[0].password },
-          //   "test",
-          //   { expiresIn: "1h" }
-          // );
-          const token = jwt.sign(
-            { email: data[0].email, name: data[0].name, id: data[0].id },
-            "test",
-            { expiresIn: "1h" }
-          );
-          const { password, ...others } = data[0];
-          return res
+      const checkpass = req.body.password;
+      const password = data[0].password;
+      const compare = checkpass.localeCompare(password);
+      console.log(compare);
+      if (compare == 0) {
+        const token = jwt.sign(
+          { email: data[0].email, name: data[0].name, id: data[0].id },
+          "test",
+          { expiresIn: "1h" }
+        );
+        const { password, ...others } = data[0];
+        return res
 
-            .cookie("AccessToken", token, {
-              httpOnly: true,
-              secure: true,
-            })
-            .json({
-              auth: true,
-              token: token,
-              result: result[0],
-              message: "Login Successful",
-            });
-          // .status(200)
-          // .json({ Status: "Success", token });
-          // return res.json({ Status: "Success", token });
-        } else {
-          return res.json({ Error: "Password not matched" });
-        }
-      } catch (error) {
-        return res.json({ Error: `Internal Logging Error ${error}` });
+          .cookie("AccessToken", token, {
+            httpOnly: true,
+            secure: true,
+          })
+
+          .status(200)
+          .json({ success: true, Status: "Success", token });
+      } else {
+        return res.json({ success: false, Error: "Password not matched" });
       }
     } else {
       return res.json({ Error: "Email Not Existed" });
-      // return res.json({Error:"Password not matched"})
     }
   });
 });

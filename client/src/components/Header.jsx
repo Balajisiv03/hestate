@@ -2,46 +2,94 @@ import { Link } from "react-router-dom";
 import Axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import profile from "../assets/profile.png";
+// import profile from "../assets/profile.png";
 
 const Header = () => {
-  const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const storedUserData = localStorage.getItem("UserDetails");
-    if (storedUserData) {
-      setUserData(JSON.parse(storedUserData));
-    } else {
-      const token = localStorage.getItem("token");
-      if (token) {
-        Axios.get("https://hestate-backend.onrender.com/isAuth", {
-          headers: {
-            "x-access-token": token,
-          },
-        })
-          .then((response) => {
-            if (response.data.auth) {
-              const userData = response.data.userData;
-              setUserData(userData);
-              localStorage.setItem("userDetails", JSON.stringify(userData));
-            } else {
-              console.error("Authentication failed");
-            }
-          })
-          .catch((error) => {
-            console.error("An unexpected error occurred:", error.message);
-          });
-      }
-    }
-  }, []);
+  // const [userData, setUserData] = useState(null);
+  // useEffect(() => {
+  //   const storedUserData = localStorage.getItem("UserDetails");
+  //   if (storedUserData) {
+  //     setUserData(JSON.parse(storedUserData));
+  //   } else {
+  //     const token = localStorage.getItem("token");
+  //     if (token) {
+  //       Axios.get("https://hestate-backend.onrender.com/isAuth", {
+  //         headers: {
+  //           "x-access-token": token,
+  //         },
+  //       })
+  //         .then((response) => {
+  //           if (response.data.auth) {
+  //             const userData = response.data.userData;
+  //             setUserData(userData);
+  //             localStorage.setItem("userDetails", JSON.stringify(userData));
+  //           } else {
+  //             console.error("Authentication failed");
+  //           }
+  //         })
+  //         .catch((error) => {
+  //           console.error("An unexpected error occurred:", error.message);
+  //         });
+  //     }
+  //   }
+  // }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userData");
-    setUserData(null);
-    navigate("/");
+    localStorage.removeItem("Profile");
+    localStorage.removeItem("UserDetails");
+    navigate("/login");
   };
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [profileData, setProfileData] = useState(null);
+  const token = JSON.parse(localStorage.getItem("Profile"));
+
+  const checkAuthenticationAndFetchProfile = () => {
+    console.log(token);
+    if (token) {
+      Axios.get("https://hestate-backend.onrender.com/verifyToken", {
+        headers: {
+          Authorization: `Bearer ${token.token}`,
+        },
+      })
+        .then((response) => {
+          // If token is valid, set isLoggedIn to true
+          setIsLoggedIn(true);
+          // Fetch profile data
+          Axios.get("https://hestate-backend.onrender.com/singleUser", {
+            headers: { Authorization: `Bearer ${token.token}` },
+          })
+            .then((response) => {
+              // Set profile data in state
+              setProfileData(response.data);
+            })
+            .catch((error) => {
+              console.error("Error fetching profile data:", error);
+            });
+        })
+        .catch((error) => {
+          // If token is invalid, log out user and remove token from local storage
+          setIsLoggedIn(false);
+          localStorage.removeItem("Profile");
+          localStorage.removeItem("UserDetails");
+          // Clear profile data
+          setProfileData(null);
+        });
+    } else {
+      // If no token found, set isLoggedIn to false and clear profile data
+      setIsLoggedIn(false);
+      setProfileData(null);
+    }
+  };
+
+  console.log(profileData);
+
+  useEffect(() => {
+    checkAuthenticationAndFetchProfile();
+  }, []);
+  console.log(profileData, "Navbar");
 
   return (
     <header className="bg-slate-200 shadow-md">
@@ -69,21 +117,8 @@ const Header = () => {
           <Link to="/profile">
             <li className="hover:underline text-slate-700">Profile</li>
           </Link>
-
-          <li className="flex items-center">
-            {userData && userData.email && (
-              <div className="flex items-center">
-                <div className="avatar">
-                  <div className="w-7 h-7 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                    <img src={profile} alt="Profile" />
-                  </div>
-                </div>
-                <p className="text-teal-500 font-bold ml-3">{userData.email}</p>
-              </div>
-            )}
-          </li>
           <li className="pr-8">
-            {userData ? (
+            {isLoggedIn ? (
               <button
                 className="text-white hover:text-gray-300 font-bold"
                 onClick={handleLogout}
